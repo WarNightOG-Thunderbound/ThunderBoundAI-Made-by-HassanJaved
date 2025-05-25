@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CodeWare Simple Mode</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+    }
+    #sidebar {
+      width: 220px;
+      background-color: #1a1a1a;
+      color: white;
+      padding: 15px;
+      box-sizing: border-box;
+    }
+    #sidebar h2 {
+      margin-top: 0;
+    }
+    #sidebar button {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+      background-color: #333;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    #canvas {
+      flex: 1;
+      position: relative;
+      background: #f4f4f4;
+      overflow: auto;
+    }
+    .element {
+      position: absolute;
+      padding: 10px;
+      border: 2px dashed transparent;
+      cursor: pointer;
+    }
+    .selected {
+      border-color: cyan;
+    }
+    #properties {
+      position: fixed;
+      bottom: 0;
+      left: 220px;
+      right: 0;
+      background: #222;
+      color: white;
+      padding: 10px;
+      display: none;
+    }
+    #properties input {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="sidebar">
+  <h2>Simple Mode</h2>
+  <button onclick="addElement('button')">Add Button</button>
+  <button onclick="addElement('text')">Add Text</button>
+  <button onclick="addElement('image')">Add Image</button>
+</div>
+
+<div id="canvas"></div>
+
+<div id="properties">
+  Width: <input type="number" id="widthInput">
+  Height: <input type="number" id="heightInput">
+  Background: <input type="color" id="bgInput">
+</div>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const props = document.getElementById('properties');
+  const widthInput = document.getElementById('widthInput');
+  const heightInput = document.getElementById('heightInput');
+  const bgInput = document.getElementById('bgInput');
+  let selected = null;
+
+  function addElement(type) {
+    const el = document.createElement('div');
+    el.classList.add('element');
+    el.style.left = '50px';
+    el.style.top = '50px';
+    el.style.width = '120px';
+    el.style.height = '50px';
+    el.style.background = '#fff';
+
+    if (type === 'button') {
+      el.innerHTML = '<button>Click Me</button>';
+    } else if (type === 'text') {
+      el.innerHTML = '<p>Sample Text</p>';
+    } else if (type === 'image') {
+      el.innerHTML = '<img src="https://via.placeholder.com/100" width="100">';
+    }
+
+    el.onclick = (e) => {
+      e.stopPropagation();
+      selectElement(el);
+    };
+
+    makeDraggable(el);
+    canvas.appendChild(el);
+  }
+
+  function selectElement(el) {
+    if (selected) selected.classList.remove('selected');
+    selected = el;
+    selected.classList.add('selected');
+    showProperties(el);
+  }
+
+  function showProperties(el) {
+    props.style.display = 'block';
+    widthInput.value = parseInt(el.style.width);
+    heightInput.value = parseInt(el.style.height);
+    bgInput.value = rgbToHex(el.style.backgroundColor || '#ffffff');
+  }
+
+  function rgbToHex(rgb) {
+    if (!rgb || typeof rgb !== 'string') return '#ffffff';
+    const result = rgb.match(/\d+/g);
+    return '#' + result.map(x => (+x).toString(16).padStart(2, '0')).join('');
+  }
+
+  widthInput.addEventListener('input', () => {
+    if (selected) selected.style.width = widthInput.value + 'px';
+  });
+  heightInput.addEventListener('input', () => {
+    if (selected) selected.style.height = heightInput.value + 'px';
+  });
+  bgInput.addEventListener('input', () => {
+    if (selected) selected.style.background = bgInput.value;
+  });
+
+  canvas.addEventListener('click', () => {
+    if (selected) selected.classList.remove('selected');
+    selected = null;
+    props.style.display = 'none';
+  });
+
+  function makeDraggable(el) {
+    let isDragging = false;
+    let offsetX, offsetY;
+
+    el.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      offsetX = e.clientX - el.offsetLeft;
+      offsetY = e.clientY - el.offsetTop;
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        el.style.left = (e.clientX - offsetX) + 'px';
+        el.style.top = (e.clientY - offsetY) + 'px';
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+  }
+</script>
+
+</body>
+</html>
