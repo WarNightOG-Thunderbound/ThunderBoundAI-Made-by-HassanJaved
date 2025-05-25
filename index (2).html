@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ThunderBound Voice AI</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    body {
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: white;
+      text-align: center;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #00d9ff;
+      animation: pulse 2s infinite;
+    }
+    #status {
+      font-size: 1.2rem;
+      margin: 10px 0;
+    }
+    .mic {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: #00d9ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 20px auto;
+      box-shadow: 0 0 20px #00d9ff;
+      animation: glow 2s infinite;
+    }
+    .mic i {
+      font-size: 2rem;
+      color: black;
+    }
+    @keyframes glow {
+      0% { box-shadow: 0 0 5px #00d9ff; }
+      50% { box-shadow: 0 0 20px #00d9ff; }
+      100% { box-shadow: 0 0 5px #00d9ff; }
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    #response {
+      padding: 10px 20px;
+      font-size: 1.1rem;
+      animation: fadeIn 1s ease;
+      max-width: 90%;
+      margin-top: 20px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <h1>ThunderBound Voice AI</h1>
+  <div class="mic" onclick="startListening()">
+    <i class="fa fa-microphone"></i>
+  </div>
+  <div id="status">Tap the mic and ask anything!</div>
+  <div id="response"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.6.2/fuse.min.js"></script>
+  <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+
+  <script>
+    const knowledge = [
+      { question: "What is ThunderBound", answer: "ThunderBound is a digital tech empire founded by Hassan Javed, offering games, web apps, and more." },
+      { question: "Who created ThunderBound", answer: "ThunderBound was founded by Hassan Javed, also known as WarNightOG." },
+      { question: "What is ThunderChat", answer: "ThunderChat is a frontend-only Discord-like chat app built by the ThunderBound team." },
+      { question: "What are ThunderBound's goals", answer: "ThunderBound aims to launch 30+ websites and apps by the end of 2025." },
+      { question: "Who is WarNightOG", answer: "WarNightOG is Hassan Javed, founder of ThunderBound and lead developer from Lahore, Pakistan." },
+      { question: "What is ThunderStore", answer: "ThunderStore is ThunderBound’s online tech and gaming ecommerce store." },
+      { question: "Tell me about ThunderShows", answer: "ThunderShows is a YouTube-like platform by ThunderBound to stream shows like Ninjago and Squid Game." },
+    ];
+
+    const fuse = new Fuse(knowledge, {
+      keys: ['question'],
+      includeScore: true,
+      threshold: 0.4,
+    });
+
+    function startListening() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      document.getElementById('status').innerText = 'Listening... 🎤';
+
+      recognition.onresult = (event) => {
+        const spokenText = event.results[0][0].transcript.toLowerCase();
+        document.getElementById('status').innerText = `You said: "${spokenText}"`;
+        handleQuery(spokenText);
+      };
+
+      recognition.onerror = () => {
+        document.getElementById('status').innerText = 'Sorry, I didn’t catch that. Try again!';
+      };
+
+      recognition.start();
+    }
+
+    function speak(text) {
+      const msg = new SpeechSynthesisUtterance(text);
+      msg.lang = 'en-US';
+      msg.rate = 0.85; // slower speed
+      msg.pitch = 1;
+      msg.voice = speechSynthesis.getVoices().find(v => v.lang === 'en-GB' || v.name.includes("Google"));
+      speechSynthesis.speak(msg);
+    }
+
+    function handleQuery(query) {
+      const result = fuse.search(query);
+      const bestMatch = result.length > 0 ? result[0].item : null;
+
+      if (bestMatch) {
+        document.getElementById('response').innerText = bestMatch.answer;
+        speak(bestMatch.answer);
+      } else {
+        const fallback = "I'm sorry, I couldn't find an answer to that. Please ask something else related to ThunderBound.";
+        document.getElementById('response').innerText = fallback;
+        speak(fallback);
+      }
+    }
+  </script>
+</body>
+</html>
